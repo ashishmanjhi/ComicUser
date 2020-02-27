@@ -10,7 +10,7 @@ import com.comicbook.model.User;
  * @author Ashish.manjhi
  * 
  *
- *This {@link UserRepository} interface is the Repository of {@link UserController} class.
+ *This {@link UserRepository} interface is the Repository of {@link User} class.
  */
 public interface UserRepository extends JpaRepository<User, Integer> { 
 

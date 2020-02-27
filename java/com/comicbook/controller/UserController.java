@@ -134,19 +134,24 @@ public class UserController {
 	@PostMapping("/{userid}/comicbooks/{comicIds}")
 	public void addMultiComicBookToUser(@PathVariable(value="userid") int userId,@PathVariable(value="comicIds") String comicIds) {
 
+		// To split the ids.
 		List<String> ids = Arrays.asList(comicIds.split(","));
+		// Looping through each id.
 		for(String i:ids)
 		{
+			// Get the user through user id.
 			User users=this.userRepository.findById(userId).orElseThrow(
 					() -> new ResourceNotFoundException("User", userId));
-
 			ComicUserEnrollment enrollment=new ComicUserEnrollment();
+			// Set user in comic user table.
 			enrollment.setUser(users);
-
+			// Get Comic Book through comic id.
 			ComicBook comicBook = this.comicBookRepository.findById(Integer.parseInt(i)).orElseThrow(
 					() -> new ResourceNotFoundException("ComicBook",Integer.parseInt(i)));	 
+			// Set comic book in comic user table.
 			enrollment.setComicBook(comicBook);
 			enrollment.setRegDate(enrollment.getRegDate());
+
 			this.comicUserRepository.save(enrollment);
 		}
 		return;
@@ -155,20 +160,22 @@ public class UserController {
 	}
 
 	/**
-	 * PostMapping add comic book into the user library.
+	 * PostMapping add one comic book into the user library.
 	 * @param User id
 	 * @param comicBookId
 	 * @return User
 	 */
 	@PostMapping("/{userid}/comicbook/{comicid}")
 	public ComicUserEnrollment addComicBookToUser(@PathVariable(value="userid") int userId, @PathVariable(value="comicid") int comicId){
-		// Finds a persisted comic
+		// Finds the requested comic book.
 		ComicBook comicBook = this.comicBookRepository.findById(comicId).orElseThrow(
 				() -> new ResourceNotFoundException("ComicBook", comicId));
 
+		// Finds the requested user.
 		User users=this.userRepository.findById(userId).orElseThrow(
 				() -> new ResourceNotFoundException("User", userId));
 
+		// Inserting comic book and user into the comic user table.
 		ComicUserEnrollment enrollment=new ComicUserEnrollment();
 		enrollment.setComicBook(comicBook);
 		enrollment.setUser(users);

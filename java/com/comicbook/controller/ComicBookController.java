@@ -123,12 +123,17 @@ public class ComicBookController {
 			return  comicBook.getComicUserEnrollments();
 		}).orElseThrow(() -> new ResourceNotFoundException("ComicBook", id));
 	}
-	
+
+	/**
+	 * GetMapping finds Comic book with a particular read time.
+	 * 
+	 * @param time
+	 * @return Comic Book
+	 */
 	@GetMapping("/readtime/{time}")
 	public ComicBook getComicBookByReadTime(@PathVariable(value="time") String time) {
 		return this.comicBookRepository.findByReadTime(time).orElseThrow(() -> 
 		new ResourceNotFoundException("ComicBook", time)
 				);
-		
 	}
 }
