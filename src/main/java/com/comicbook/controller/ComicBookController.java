@@ -1,6 +1,8 @@
 package com.comicbook.controller;
 
 import java.util.List;
+import java.util.Set;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.comicbook.exception.ResourceNotFoundException;
 import com.comicbook.model.ComicBook;
+import com.comicbook.model.ComicUserEnrollment;
 import com.comicbook.repository.ComicBookRepository;
 
 /**
@@ -87,6 +90,8 @@ public class ComicBookController {
 			toUpdate.setWriter(comicBook.getWriter());
 			toUpdate.setPublisher(comicBook.getPublisher());
 			toUpdate.setGenre(comicBook.getGenre());
+			toUpdate.setDescription(comicBook.getDescription());
+			toUpdate.setReadTime(comicBook.getReadTime());
 			return this.comicBookRepository.save(toUpdate);
 		}).orElseThrow(() -> new ResourceNotFoundException("ComicBook", comicBook.getId()));
 	}
@@ -113,11 +118,24 @@ public class ComicBookController {
 	 * @param id
 	 * @return
 	 */
-//	@GetMapping("/{id}/users")
-//	public Set<User> getUsersByComicBookId(@PathVariable int id){
-//		// Finds comic by id and returns it's recorded users, otherwise throws exception
-//		return this.comicBookRepository.findById(id).map((comicBook) -> {
-//			return comicBook.getUsers();
-//		}).orElseThrow(() -> new ResourceNotFoundException("ComicBook", id));
-//	}
+	@GetMapping("/{id}/users")
+	public Set<ComicUserEnrollment> getUsersByComicBookId(@PathVariable int id){
+		// Finds comic by id and returns it's recorded users, otherwise throws exception
+		return this.comicBookRepository.findById(id).map((comicBook) -> {
+			return  comicBook.getComicUserEnrollments();
+		}).orElseThrow(() -> new ResourceNotFoundException("ComicBook", id));
+	}
+
+	/**
+	 * GetMapping finds Comic book with a particular read time.
+	 * 
+	 * @param time
+	 * @return Comic Book
+	 */
+	@GetMapping("/readtime/{time}")
+	public ComicBook getComicBookByReadTime(@PathVariable(value="time") String time) {
+		return this.comicBookRepository.findByReadTime(time).orElseThrow(() -> 
+		new ResourceNotFoundException("ComicBook", time)
+				);
+	}
 }

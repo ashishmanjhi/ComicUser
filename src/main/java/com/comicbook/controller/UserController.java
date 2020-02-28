@@ -1,8 +1,7 @@
 package com.comicbook.controller;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,10 +46,13 @@ public class UserController {
 	@Autowired
 	private ComicBookRepository comicBookRepository;
 
+	/*
+	 *  Comic User Repository
+	 */
 	@Autowired
 	private ComicUserRepository comicUserRepository;
-	
-	
+
+
 	/**
 	 * PostMapping creates a new User in the database.
 	 * 
@@ -124,52 +126,63 @@ public class UserController {
 	}
 
 	/**
-	 * GetMapping finds all the comic books under a user by using user id.
+	 *  PostMapping adds multiple comic book into the user library.
+	 * 
 	 * @param userId
-	 * @return User
+	 * @param comicIds
 	 */
-//	@GetMapping("/{userId}/comicbooks")
-//	public List<ComicUserEnrollment> getComicBooksByUserId(@PathVariable int userId){
-//		// Finds User by id and returns it's recorded comicbooks, otherwise throws exception 
-//		return this.userRepository.findById(userId).map((user) -> {
-//			return user.getComicUserEnrollments();
-//		}).orElseThrow(() -> new ResourceNotFoundException("User", userId));
-//	}
+	@PostMapping("/{userid}/comicbooks/{comicIds}")
+	public void addMultiComicBookToUser(@PathVariable(value="userid") int userId,@PathVariable(value="comicIds") String comicIds) {
+
+		// To split the ids.
+		List<String> ids = Arrays.asList(comicIds.split(","));
+		// Looping through each id.
+		for(String i:ids)
+		{
+			// Get the user through user id.
+			User users=this.userRepository.findById(userId).orElseThrow(
+					() -> new ResourceNotFoundException("User", userId));
+			ComicUserEnrollment enrollment=new ComicUserEnrollment();
+			// Set user in comic user table.
+			enrollment.setUser(users);
+			// Get Comic Book through comic id.
+			ComicBook comicBook = this.comicBookRepository.findById(Integer.parseInt(i)).orElseThrow(
+					() -> new ResourceNotFoundException("ComicBook",Integer.parseInt(i)));	 
+			// Set comic book in comic user table.
+			enrollment.setComicBook(comicBook);
+			enrollment.setRegDate(enrollment.getRegDate());
+
+			this.comicUserRepository.save(enrollment);
+		}
+		return;
+
+
+	}
 
 	/**
-	 * PostMapping add comic book into the user library.
+	 * PostMapping add one comic book into the user library.
 	 * @param User id
 	 * @param comicBookId
 	 * @return User
 	 */
-	
-	@PostMapping("/add")
-	public  ResponseEntity<ComicUserEnrollment> addComicBookToUser(@Valid @RequestBody ComicUserEnrollment comicUserEnrollment) {
-		return new  ResponseEntity<ComicUserEnrollment>(comicUserRepository.save(comicUserEnrollment),HttpStatus.CREATED);
-	}
-
-	
 	@PostMapping("/{userid}/comicbook/{comicid}")
 	public ComicUserEnrollment addComicBookToUser(@PathVariable(value="userid") int userId, @PathVariable(value="comicid") int comicId){
-		// Finds a persisted comic
+		// Finds the requested comic book.
 		ComicBook comicBook = this.comicBookRepository.findById(comicId).orElseThrow(
 				() -> new ResourceNotFoundException("ComicBook", comicId));
-	    
-		 User users=this.userRepository.findById(userId).orElseThrow(
+
+		// Finds the requested user.
+		User users=this.userRepository.findById(userId).orElseThrow(
 				() -> new ResourceNotFoundException("User", userId));
-		 
-		 ComicUserEnrollment enrollment=new ComicUserEnrollment();
-		 enrollment.setComicBook(comicBook);
-		 enrollment.setUser(users);
-		 enrollment.setRegDate(enrollment.getRegDate());
-		
+
+		// Inserting comic book and user into the comic user table.
+		ComicUserEnrollment enrollment=new ComicUserEnrollment();
+		enrollment.setComicBook(comicBook);
+		enrollment.setUser(users);
+		enrollment.setRegDate(enrollment.getRegDate());
+
 		this.comicUserRepository.save(enrollment);
-		 return enrollment;
-//			return this.userRepository.findById(userId).map((user) -> {
-//				user.addComicBook(user.addComicUserEnrollment(comicBook));
-//				return this.userRepository.save(user).getComicUserEnrollments(); 
-//			}).orElseThrow(() -> new ResourceNotFoundException("User", userId));
-//		
+		return enrollment;
 	}
 
 
@@ -179,32 +192,32 @@ public class UserController {
 	 * @param genre
 	 * @return
 	 */
-//	@GetMapping("/genre/{genre}")
-//	public  ResponseEntity<List<User>> getUsersByComicBooksGenre(@PathVariable("genre") String genre){
-//		
-//		 List<User> user = userRepository.findByComicBooksGenre(genre);
-//		 if(user.isEmpty())
-//			 throw new ResourceNotFoundException("User", genre);
-//		 else
-//		return new ResponseEntity<List<User>>(user,HttpStatus.OK);
-//		}
-//	
-//	/**
-//	 * GetMapping finds all the user who read a particular genre of comic book and selected age.
-//	 * 
-//	 * @param genre
-//	 * @param age
-//	 * @return
-//	 */
-//	@GetMapping("/genre/{genre}/user/{age}")
-//	public  ResponseEntity<List<User>> getUsersByComicBooksGenreAndUserAge(@PathVariable("genre") String genre,@PathVariable("age") int age)
-//	{
-//		
-//		 List<User> user = userRepository.findByComicBooksGenreAndAge(genre,age);
-//		 if(user.isEmpty())
-//			 throw new ResourceNotFoundException("User", genre,age);
-//		 else
-//		return new ResponseEntity<List<User>>(user,HttpStatus.OK);
-//		}
+	@GetMapping("/genre/{genre}")
+	public  ResponseEntity<List<User>> getUsersByComicBooksGenre(@PathVariable("genre") String genre){
+
+		List<User> user = userRepository.findByComicUserEnrollmentsComicBookGenre(genre);
+		if(user.isEmpty())
+			throw new ResourceNotFoundException("User", genre);
+		else
+			return new ResponseEntity<List<User>>(user,HttpStatus.OK);
+	}
+
+	/**
+	 * GetMapping finds all the user who read a particular genre of comic book and selected age.
+	 * 
+	 * @param genre
+	 * @param age
+	 * @return
+	 */
+	@GetMapping("/genre/{genre}/user/{age}")
+	public  ResponseEntity<List<User>> getUsersByComicBooksGenreAndUserAge(@PathVariable("genre") String genre,@PathVariable("age") int age)
+	{
+
+		List<User> user = userRepository.findByComicUserEnrollmentsComicBookGenreAndAge(genre,age);
+		if(user.isEmpty())
+			throw new ResourceNotFoundException("User", genre,age);
+		else
+			return new ResponseEntity<List<User>>(user,HttpStatus.OK);
+	}
 
 }
