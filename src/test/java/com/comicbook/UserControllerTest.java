@@ -10,6 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import com.comicbook.model.ComicBook;
+import com.comicbook.model.ComicUserEnrollment;
 import com.comicbook.model.User;
 
 /**
@@ -36,6 +38,7 @@ public class UserControllerTest extends ComicApplicationTests {
 		int status = mvcResult.getResponse().getStatus();
 		assertEquals(200, status);
 		String content = mvcResult.getResponse().getContentAsString();
+		System.out.println(content);
 		User[] userlist = super.mapFromJson(content, User[].class);
 		assertTrue(userlist.length > 0);
 	}
@@ -102,5 +105,54 @@ public class UserControllerTest extends ComicApplicationTests {
 		assertEquals(200, status);
 		String content = mvcResult.getResponse().getContentAsString();
 		System.out.println(content);
+	}
+	
+	/**
+	 * This test case check the GET endpoint for user to get user by comic genre.
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void getUserByGenre() throws Exception{
+		String uri="/api/user/genre/Action";
+		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.get(uri)
+				.accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
+		int status = mvcResult.getResponse().getStatus();
+		assertEquals(200, status);
+		String content = mvcResult.getResponse().getContentAsString();
+		User[] userlist = super.mapFromJson(content, User[].class);
+		
+	}
+	
+	/**
+	 *  This test case check the POST endpoint for mapping comic books and users with each other.
+	 * @throws Exception
+	 */
+	@Test
+	public void addComicToUser() throws Exception{
+		String uri ="/api/user/4/comicbook/3";
+		
+		String uri1="/api/user/4";
+		MvcResult mvcResultuser = mvc.perform(MockMvcRequestBuilders.get(uri1)
+				.accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
+		String content1 = mvcResultuser.getResponse().getContentAsString();
+		User userlist = super.mapFromJson(content1, User.class);
+		
+		String uri2="/api/comic/3";
+		MvcResult mvcResultcomic = mvc.perform(MockMvcRequestBuilders.get(uri2)
+				.accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
+		String content2 = mvcResultcomic.getResponse().getContentAsString();
+		ComicBook comic= super.mapFromJson(content2, ComicBook.class);
+		
+		ComicUserEnrollment enrollment=new ComicUserEnrollment();
+		enrollment.setComicBook(comic);
+		enrollment.setUser(userlist);
+		
+		String inputJson = super.mapToJson(enrollment);
+		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.post(uri)
+				.contentType(MediaType.APPLICATION_JSON_VALUE)
+				.content(inputJson)).andReturn();
+		int status = mvcResult.getResponse().getStatus();
+		assertEquals(200, status);
 	}
 }
